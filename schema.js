@@ -1,3 +1,4 @@
+var lodash = require('lodash');
 var graphql = require('graphql');
 var Db = require('./db');
 
@@ -166,7 +167,29 @@ var Mutation = new graphql.GraphQLObjectType({
                 }
             },
             resolve(_, args) {
-                return Db.models.person.bulkCreate(args.people, {returning: true});
+                
+                console.log('pre-chunking');
+                if(Array.isArray(args.people))
+                    console.log('args is array');
+                    
+                try
+                {
+                    var peopleChunks = lodash.chunk(args.people, 100);
+                    console.log('post-chunking');
+                    
+                    peopleChunks.forEach(function(peopleChunk) {
+                        console.log(peopleChunk);
+                        Db.models.person.bulkCreate(peopleChunk);
+                    }, this);
+                }
+                catch(e)
+                {
+                    console.log(e);
+                }
+                
+                
+                //return Db.models.person.bulkCreate(args.people, {returning: true});
+                
                 /*
                 return new Promise(function() {
                     var people = [];

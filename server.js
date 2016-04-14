@@ -8,11 +8,13 @@ var bodyParser = require('body-parser');
 let app  = express();
 
 // parse POST body as text
-app.use(bodyParser.text({ type: 'application/graphql' }));
+app.use(bodyParser.text({ type: 'application/graphql', limit: '50mb' }));
+//app.use(bodyParser.json({limit: '50mb'}));
+//app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 
 app.post('/graphql', (req, res) => {
   // execute GraphQL!
-  console.log(req.body);
+  // console.log(req.body);
   graphql.graphql(schema, req.body)
     .then(result => res.send(result));
 });
