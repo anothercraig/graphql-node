@@ -1,7 +1,8 @@
 "use strict";
 
 var express = require('express');
-var schema = require('./schema');
+var mutate = require('./schemaMutate');
+var query = require('./schemaQuery');
 var graphql = require('graphql');
 var bodyParser = require('body-parser');
 
@@ -12,9 +13,19 @@ app.use(bodyParser.text({ type: 'application/graphql', limit: '50mb' }));
 
 app.post('/graphql', (req, res) => {
   // execute GraphQL!
-  graphql.graphql(schema, req.body)
+  console.log(req.body);
+  graphql.graphql(mutate, req.body)
     .then((result) => {
-      console.log(result);
+      res.send(result);
+    });
+});
+
+app.get('/graphql', (req, res) => {
+  // execute GraphQL!
+  //console.log(req.query);
+  graphql.graphql(query, req.query.query)
+    .then((result) => {
+      //console.log(result);
       res.send(result);
     });
 });
