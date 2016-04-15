@@ -93,6 +93,31 @@ var Query = new graphql.GraphQLObjectType({
     }
 });
 
+var PostInput = new graphql.GraphQLInputObjectType({
+    name: 'PostInput',
+    description: 'This represents a Post Input',
+    fields: {
+        id: {
+            type: graphql.GraphQLInt,
+            resolve(post) {
+                return post.id;
+            }
+        },
+        title: {
+            type: graphql.GraphQLString,
+            resolve(post) {
+                return post.title;
+            }
+        },
+        content: {
+            type: graphql.GraphQLString,
+            resolve(post) {
+                return post.content;
+            }
+        }
+    }
+});
+
 var PersonInput = new graphql.GraphQLInputObjectType({
     name: 'PersonInput',
     description: 'This represents a Person Input',
@@ -119,6 +144,12 @@ var PersonInput = new graphql.GraphQLInputObjectType({
             type: graphql.GraphQLString,
             resolve(person) {
                 return person.email;
+            }
+        },
+        posts: {
+            type: new graphql.GraphQLList(PostInput),
+            resolve(person) {
+                return person.getPosts();
             }
         }
     }
@@ -149,13 +180,33 @@ var Mutation = new graphql.GraphQLObjectType({
                 },
                 email: {
                     type: new graphql.GraphQLNonNull(graphql.GraphQLString)
+                },
+                posts: {
+                    type: new graphql.GraphQLList(PostInput)
                 }
             },
             resolve(_, args) {
-                return Db.models.person.create({
-                    firstname: args.firstName,
-                    lastname: args.lastName,
-                    email: args.email.toLowerCase()
+
+                return new Promise(function(resolve, reject) {
+                    //
+                    Db.models.person.create({
+                        firstname: args.firstName,
+                        lastname: args.lastName,
+                        email: args.email.toLowerCase()
+                    }).then((data) => {
+                        
+                        if(args.posts && args.posts.length > 0)
+                        {
+                            args.posts.forEach(function(post){
+                                Db.models.post.create({
+                                    personId: data.dataValues.id,
+                                    title: post.title,
+                                    content: post.content
+                                });
+                            });
+                        }
+                        resolve(data);
+                    }, (err) => reject(err));
                 });
             }
         },
@@ -168,14 +219,10 @@ var Mutation = new graphql.GraphQLObjectType({
             },
             resolve(_, args) {
                 
-                console.log('pre-chunking');
-                if(Array.isArray(args.people))
-                    console.log('args is array');
-                    
                 try
                 {
-                    var peopleChunks = lodash.chunk(args.people, 100);
-                    console.log('post-chunking');
+                    var peopleChunks = lodash.chunk(args.people, 1000);
+                    //console.log('post-chunking');
                     
                     peopleChunks.forEach(function(peopleChunk) {
                         console.log(peopleChunk);
