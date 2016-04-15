@@ -18,3 +18,22 @@ mutation addPeople {
 }
 ```
 Content-Type needs to be **application/graphql**
+
+### test add person with posts
+following the client test example, post a person with posts
+```
+mutation addPerson {
+  addPerson
+  (
+    firstName: "Bob1", lastName: "Bob1", email: "bob@bob.com", 
+    posts: 
+    [
+        { title: "A title", content: "Sample content" },
+        { title: "Another title", content: "More content" }
+    ]
+  )
+  {
+    id  
+  }
+}
+```
