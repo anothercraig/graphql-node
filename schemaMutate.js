@@ -80,6 +80,7 @@ var Query = new graphql.GraphQLObjectType({
                 }
             },
             resolve(root, args) {
+                //console.log('Inside query object');
                 return Db.models.person.findAll({where: args});
             }
         },
@@ -160,7 +161,19 @@ var AddPeopleEvent = new graphql.GraphQLObjectType({
     description: 'Add People Event',
     fields: {
         people: {
-            type: new graphql.GraphQLList(Person)
+            type: new graphql.GraphQLList(Person),
+            resolve(root, args) {
+                
+                var ids = [];
+                root.forEach(function(person) {
+                    ids.push(person.id);
+                }, this);
+                
+                //console.log(JSON.stringify(root, null, 4));
+                //console.log(JSON.stringify(args, null, 4));
+
+                return Db.models.person.findAll({where: { id: {in: ids}}});
+            }
         }  
     }
 });
@@ -205,6 +218,7 @@ var Mutation = new graphql.GraphQLObjectType({
                                 });
                             });
                         }
+                        console.log(data);
                         resolve(data);
                     }, (err) => reject(err));
                 });
@@ -219,51 +233,39 @@ var Mutation = new graphql.GraphQLObjectType({
             },
             resolve(_, args) {
                 
-                try
-                {
-                    var peopleChunks = lodash.chunk(args.people, 1000);
-                    //console.log('post-chunking');
-                    
-                    peopleChunks.forEach(function(peopleChunk) {
-                        console.log(peopleChunk);
-                        Db.models.person.bulkCreate(peopleChunk);
-                    }, this);
-                }
-                catch(e)
-                {
-                    console.log(e);
-                }
-                
-                
                 //return Db.models.person.bulkCreate(args.people, {returning: true});
                 
-                /*
-                return new Promise(function() {
-                    var people = [];
-                
-                    Db.models.person.bulkCreate(args.people).then(function(models) {
-                        //console.log(models);
-                        models.forEach(function(element) {
-                            //console.log(element.dataValues);
-                            people.push({
-                                id: 1,
-                                firstname: element.dataValues.firstname,
-                                lastname: element.dataValues.lastname,
-                                email: element.dataValues.email
-                            });
-                        }, this);
-                        //console.log(people);
-                    });
+                return new Promise(function(resolve, reject) {
                     
-                    return people;
+                    var people = [];
+                    try
+                    {
+                        var peopleChunks = lodash.chunk(args.people, 1000);
+                        peopleChunks.forEach(function(peopleChunk) {
+                            people.push(Db.models.person.bulkCreate(peopleChunk, {returning: true}));
+                        }, this);
+                        
+                        // resolve all promises and flatten the result so our
+                        // graph object can understand it
+                        Promise.all(people).then((data) => {
+                            var list = lodash.flatten(data);
+                            //console.log(list);
+                            resolve(list);
+                        })
+                    }
+                    catch(e)
+                    {
+                        console.log(e);
+                        reject(e);
+                    }
                 });
-                */
             }
         }
     }
-})
+});
 
 var Schema = new graphql.GraphQLSchema({
+    // query is REQUIRED!
     query: Query,
     mutation: Mutation
 });
