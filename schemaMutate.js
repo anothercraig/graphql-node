@@ -37,6 +37,12 @@ var Person = new graphql.GraphQLObjectType({
                 return person.id;
             }
         },
+        clientId: {
+            type: graphql.GraphQLInt,
+            resolve(person) {
+                return person.clientId;
+            }
+        },
         firstname: {
             type: graphql.GraphQLString,
             resolve(person) {
@@ -129,6 +135,12 @@ var PersonInput = new graphql.GraphQLInputObjectType({
                 return person.id;
             }
         },
+        clientId: {
+            type: graphql.GraphQLInt,
+            resolve(person) {
+                return person.clientId;
+            }
+        },
         firstname: {
             type: graphql.GraphQLString,
             resolve(person) {
@@ -185,6 +197,9 @@ var Mutation = new graphql.GraphQLObjectType({
         addPerson: {
             type: Person,
             args: {
+                clientId: {
+                    type: new graphql.GraphQLNonNull(graphql.GraphQLInt)
+                },
                 firstName: {
                     type: new graphql.GraphQLNonNull(graphql.GraphQLString)
                 },
@@ -203,6 +218,7 @@ var Mutation = new graphql.GraphQLObjectType({
                 return new Promise(function(resolve, reject) {
                     //
                     Db.models.person.create({
+                        clientId: args.clientId,
                         firstname: args.firstName,
                         lastname: args.lastName,
                         email: args.email.toLowerCase()
@@ -238,6 +254,7 @@ var Mutation = new graphql.GraphQLObjectType({
                 return new Promise(function(resolve, reject) {
                     
                     var people = [];
+                    var posts = [];
                     try
                     {
                         var peopleChunks = lodash.chunk(args.people, 1000);
@@ -248,10 +265,31 @@ var Mutation = new graphql.GraphQLObjectType({
                         // resolve all promises and flatten the result so our
                         // graph object can understand it
                         Promise.all(people).then((data) => {
-                            var list = lodash.flatten(data);
-                            //console.log(list);
-                            resolve(list);
-                        })
+                            
+                            var listOfPeople = lodash.flatten(data);
+                            
+                            listOfPeople.forEach(function(person) {
+                                var personMatch = lodash.find(args.people, function(personInput){
+                                    return person.clientId === personInput.clientId;
+                                });
+                                
+                                if(personMatch.posts) {
+                                    var peoplePosts = [];
+                                    personMatch.posts.forEach(function(post) {
+                                        peoplePosts.push({
+                                            personId: person.id,
+                                            title: post.title,
+                                            content: post.content
+                                        })
+                                    });
+                                    posts.push(Db.models.post.bulkCreate(peoplePosts));
+                                }
+                            });
+                            
+                            Promise.all(posts).then(() => {
+                                resolve(listOfPeople);
+                            });
+                        });
                     }
                     catch(e)
                     {

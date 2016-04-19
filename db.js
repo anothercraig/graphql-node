@@ -13,6 +13,11 @@ var Conn = new Sequelize(
 );
 
 var Person = Conn.define('person', {
+    clientId:{
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        unique: true
+    },
     firstname:{
         type: Sequelize.STRING,
         allowNull: false
@@ -28,7 +33,32 @@ var Person = Conn.define('person', {
             isEmail: true
         }
     }
-});
+}/*, {
+    hooks: {
+        beforeBulkCreate: function(persons, options) {
+            //person.clientId = 1; //person.getClietnId();
+            persons.forEach(function (person) {
+                person.clientId = person.getClientId();
+                //var test = person.posts;
+            });
+        },
+        afterBulkCreate: function(persons, options) {
+            //person.clientId = person.clientId;
+            persons.forEach(function (person) {
+                var id = person.clientId();
+                //var test = person.posts;
+            });
+        }
+  },
+    instanceMethods: {
+        getClientId: function() {
+            //this.curClientId = this.curClientId ? this.curClientId + 1 : 0;
+            //return this.curClientId;
+            var id = 0;
+            return function() { return id++; }; 
+            }
+        }
+}*/);
 
 var Post = Conn.define('post', {
     title:{
@@ -45,9 +75,12 @@ var Post = Conn.define('post', {
 Person.hasMany(Post);
 Post.belongsTo(Person);
 
+var count = 0;
+
 Conn.sync({force: true}).then(() => {
     _.times(10, ()=>{
         return Person.create({
+            clientId: count++,
             firstname: Faker.name.firstName(),
             lastname: Faker.name.lastName(),
             email: Faker.internet.email()
