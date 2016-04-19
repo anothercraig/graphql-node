@@ -5,6 +5,11 @@ Simple node server that implements graphql, express and sequelize
 if you encounter issues with running;
 - Asked by Sequelize to install tedious manually??
   execute ```npm i -S tedious```
+- Can't connect to MS SQL Express?
+  check Sql Server Configuration Manager, ensure SQL Server Network Configuration protocol is set correctly.
+  - Server Configuration Manager -> SQL Server Network Configuration -> TCP/IP -> IPAll -> TCP Dynamic Ports: <blank>
+  - Server Configuration Manager -> SQL Server Network Configuration -> TCP/IP -> IPAll -> TCP Port: 1433
+  check database accepts SQL Authentication & Windows Auth
 
 ### client test
 using something like Postman, post the following to bulk add data
