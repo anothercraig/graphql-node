@@ -40,3 +40,36 @@ mutation addPerson {
   }
 }
 ```
+
+### test add people with posts
+this example adds people with with posts
+```
+mutation addPeople {
+  addPeople
+  (people: [
+      {clientId: 15, firstname: "Bob1", lastname: "Bob1", email: "bob@bob.com", 
+        posts: 
+        [
+            { title: "A title", content: "Sample content" },
+            { title: "Another title", content: "More content" }
+        ]}, 
+      {clientId: 16, firstname: "Bob2", lastname: "Bob2", email: "bob@bob.com"}, 
+      {clientId: 17, firstname: "Bob3", lastname: "Bob3", email: "bob@bob.com"},
+	    {clientId: 18, firstname: "Bob4", lastname: "Bob1", email: "bob@bob.com"}, 
+      {clientId: 19, firstname: "Bob5", lastname: "Bob2", email: "bob@bob.com"}, 
+      {clientId: 20, firstname: "Bob6", lastname: "Bob3", email: "bob@bob.com"},
+	    {clientId: 21, firstname: "Bob7", lastname: "Bob1", email: "bob@bob.com"}, 
+      {clientId: 22, firstname: "Bob8", lastname: "Bob2", email: "bob@bob.com"}, 
+      {clientId: 23, firstname: "Bob9", lastname: "Bob3", email: "bob@bob.com"}
+  ]) 
+    {
+    people {
+      id
+      email
+      posts {
+        title
+      }
+    }
+  }
+}
+```
