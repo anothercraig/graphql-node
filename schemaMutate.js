@@ -289,7 +289,7 @@ var Mutation = new graphql.GraphQLObjectType({
                             Promise.all(posts).then(() => {
                                 resolve(listOfPeople);
                             });
-                        });
+                        }, (err) => reject(err));
                     }
                     catch(e)
                     {

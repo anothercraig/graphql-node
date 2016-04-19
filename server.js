@@ -13,16 +13,18 @@ let app  = express();
 app.use(bodyParser.text({ type: 'application/graphql', limit: '50mb' }));
 
 app.post('/graphql', (req, res) => {
-  // execute GraphQL!
+  // execute GraphQL mutation!
   graphql.graphql(mutate, req.body)
     .then((result) => {
       //console.log(result);
       res.send(result);
+    }, (err) => {
+      res.status(400).send('Bad request');
     });
 });
 
 app.get('/graphql', (req, res) => {
-  // execute GraphQL!
+  // execute GraphQL query!
   graphql.graphql(query, req.query.query)
     .then((result) => {
       res.send(result);
